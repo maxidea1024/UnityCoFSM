@@ -1,7 +1,7 @@
 # UnityCoFSM
 State machines are a very effective way to manage game state, either on your main game play object (Game Over, Restart, Continue etc) or on individual actors and NPCs (AI behaviours, Animations, etc). The following is a simple state machine that should work well within any Unity context.
 
-# Designed with simplicity in min
+# Designed with simplicity in mind
 Most state machines come from the world of C# enterprise, and are wonderfully complicated or require a lot of boilerplate code. State Machines however are an incredibly useful pattern in game development, administrative overhead should never be a burden that discourages you from writing good code.
 
 - Simple use of Enums as state definition.
@@ -60,7 +60,7 @@ State callbacks are defined by underscore convention ( StateName_Method )
 ```cs
 void Init_Enter()
 {
-	Debug.Log("We are now ready");
+    Debug.Log("We are now ready");
 }
 
 // Coroutines are supported, simply return IEnumerator
@@ -80,12 +80,12 @@ IEnumerator Play_Enter()
 
 void Play_Update()
 {
-	Debug.Log("Game Playing");
+    Debug.Log("Game Playing");
 }
 
 void Play_Exit()
 {
-	Debug.Log("Game Over");
+    Debug.Log("Game Over");
 }
 ```
 
@@ -125,7 +125,7 @@ StateMahcine.Overwrite will cancel any current transitions, and call the next st
 ```cs
 void MyCurrentState_Finally()
 {
-    //Reset object to desired configuration
+    // Reset object to desired configuration
 }
 ```
 
@@ -150,6 +150,9 @@ This is designed to target mobile, as such should be memory allocation free. How
 
 ### Windows Store Platforms
 Due to differences in the Windows Store flavour of .Net, this is currently incompatible. More details available in this [issue](https://github.com/thefuntastic/Unity3d-Finite-State-Machine/issues/4).
+
+### API
+사용 가능한 함수들에 대해서는 [여기](API.md)를 참조하세요.
 
 ## License
 [MIT License](LICENSE)
