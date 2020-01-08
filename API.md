@@ -5,7 +5,6 @@
 * TransitionOptions.AllowSelfTransition
 * TransitionOptions.Overwrite
 
-
 ### StateMachine < T >
 * StateMachine< T >.Transit(T newState)
 * StateMachine< T >.TransitSelf(T newState)
@@ -19,7 +18,6 @@
 * MonoBehaviour StateMachine< T >.Component
 * float StateMachine< T >.ElapsedTimeSinceStateChanged
 * StateMachine<T> StateMachine< T >.Initialize(MonoBehaviour monoComponent)
-* StateMachine<T> StateMachine< T >.Initialize(MonoBehaviour monoComponent, T startState)
+* StateMachine<T> StateMachine< T >.Initialize(MonoBehaviour monoComponent, T initialState)
 
 ### StateMachineRunner
-
