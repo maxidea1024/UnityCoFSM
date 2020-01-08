@@ -91,12 +91,12 @@ void Play_Exit()
 
 Currently supported methods are:
 
-- Enter
-- Exit
-- FixedUpdate
-- Update
-- LateUpdate
-- Finally
+- `Enter`
+- `Exit`
+- `FixedUpdate`
+- `Update`
+- `LateUpdate`
+- `Finally`
 
 
 It should be easy enough to extend the source to include other Unity Methods such as `OnTriggerEnter`, `OnMouseDown` etc
