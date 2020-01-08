@@ -150,3 +150,6 @@ This is designed to target mobile, as such should be memory allocation free. How
 
 ### Windows Store Platforms
 Due to differences in the Windows Store flavour of .Net, this is currently incompatible. More details available in this [issue](https://github.com/thefuntastic/Unity3d-Finite-State-Machine/issues/4).
+
+## License
+[MIT License](LICENSE.md)
