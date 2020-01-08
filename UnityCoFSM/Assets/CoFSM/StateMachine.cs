@@ -263,7 +263,7 @@ namespace CoFSM
 
         private IEnumerator CoTransitToNewState(StateMapping newState, TransitionOptions options)
         {
-            // Chache this so that we can overwrite it and hijack a transition.
+            // Cache this so that we can overwrite it and hijack a transition.
             // Exit coroutine에서 변경될수도 있으므로, 이게 최종은 아닐 수 있음.
             destinationState_ = newState;
 
