@@ -191,12 +191,6 @@ namespace CoFSM
                     // We are already exiting current state on our way to our previous target state
                     if (exitCoroutine_ != null)
                     {
-                        // 최종적으로 변경한 상태로 전환되도록 함. 이게 바람직한건지?
-                        // 만약, 의도치 않게 다른 상태로 전환되는 경우를 체크해야한다면...???
-
-                        //경고를 날려주는게 좋을까?
-                        //조금더 자연스럽게 처리하는 방법이 없으려나??
-
                         // Overwrite with our new target
                         destinationState_ = nextState;
                         return;
@@ -253,7 +247,6 @@ namespace CoFSM
                 {
                     currentState_.enterCall();
 
-                    //TODO State.None을 정의하는게 좋지 않을까??
                     Changed?.Invoke(lastState_.state != null ? (T)lastState_.state : default(T), (T)currentState_.state);
                 }
 
@@ -264,7 +257,6 @@ namespace CoFSM
         private IEnumerator CoTransitToNewState(StateMapping newState, TransitionOptions options)
         {
             // Cache this so that we can overwrite it and hijack a transition.
-            // Exit coroutine에서 변경될수도 있으므로, 이게 최종은 아닐 수 있음.
             destinationState_ = newState;
 
             if (currentState_ != null)
@@ -312,7 +304,6 @@ namespace CoFSM
                 }
 
                 // Broadcast change only after enter transition has begun.
-                //TODO State.None을 정의하는게 좋지 않을까??
                 Changed?.Invoke(lastState_.state != null ? (T)lastState_.state : default(T), (T)currentState_.state);
             }
 
