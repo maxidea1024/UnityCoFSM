@@ -402,11 +402,6 @@ namespace CoFSM
         /// </summary>
         public float ElapsedTimeSinceStateChanged => Time.time - _stateChangedAt;
 
-
-        //
-        // Static Methods
-        //
-
         /// <summary>
         /// Initialize this state-machine.
         /// </summary>
