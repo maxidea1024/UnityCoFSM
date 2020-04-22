@@ -40,6 +40,49 @@ namespace CoFSM
 
     public class StateMachine<T> : IStateMachine where T : struct, IConvertible, IComparable
     {
+        /// <summary>
+        /// Event called when state changed.
+        /// First parameter is old state ID.  (from)
+        /// Second parameter is new state ID. (to)
+        /// </summary>
+        public event Action<T, T> Changed;
+
+        /// <summary>
+        /// Internal runner.
+        /// </summary>
+        private readonly StateMachineRunner _runner;
+
+        /// <summary>
+        /// Owner mono behaviour component
+        /// </summary>
+        private readonly MonoBehaviour _monoComponent;
+
+        /// <summary>
+        /// Last(previous) state mapping
+        /// </summary>
+        private StateMapping _lastState;
+        /// <summary>
+        /// Current state mapping
+        /// </summary>
+        private StateMapping _currentState;
+        /// <summary>
+        /// Destination state mapping
+        /// </summary>
+        private StateMapping _destinationState;
+
+        /// <summary>
+        /// Time point at state was changed.
+        /// </summary>
+        private float _stateChangedAt;
+
+        private readonly Dictionary<object, StateMapping> _stateLookup;
+
+        private bool _isInTransition = false;
+        private IEnumerator _currentTransition;
+        private IEnumerator _exitCoroutine;
+        private IEnumerator _enterCoroutine;
+        private IEnumerator _queuedChange;
+
         public StateMachine(StateMachineRunner runner, MonoBehaviour monoComponent)
         {
             _runner = runner;
@@ -131,7 +174,6 @@ namespace CoFSM
 
             return ret;
         }
-
 
         public void Transit(T newState)
         {
@@ -397,53 +439,5 @@ namespace CoFSM
 
             return runner.Initialize<T>(monoComponent, startState);
         }
-
-
-        //
-        // Member variables
-        //
-
-        /// <summary>
-        /// Event called when state changed.
-        /// First parameter is old state ID.  (from)
-        /// Second parameter is new state ID. (to)
-        /// </summary>
-        public event Action<T, T> Changed;
-
-        /// <summary>
-        /// Internal runner.
-        /// </summary>
-        private readonly StateMachineRunner _runner;
-
-        /// <summary>
-        /// Owner mono behaviour component
-        /// </summary>
-        private readonly MonoBehaviour _monoComponent;
-
-        /// <summary>
-        /// Last(previous) state mapping
-        /// </summary>
-        private StateMapping _lastState;
-        /// <summary>
-        /// Current state mapping
-        /// </summary>
-        private StateMapping _currentState;
-        /// <summary>
-        /// Destination state mapping
-        /// </summary>
-        private StateMapping _destinationState;
-
-        /// <summary>
-        /// Time point at state was changed.
-        /// </summary>
-        private float _stateChangedAt;
-
-        private readonly Dictionary<object, StateMapping> _stateLookup;
-
-        private bool _isInTransition = false;
-        private IEnumerator _currentTransition;
-        private IEnumerator _exitCoroutine;
-        private IEnumerator _enterCoroutine;
-        private IEnumerator _queuedChange;
     }
 }

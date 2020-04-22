@@ -6,6 +6,8 @@ namespace CoFSM
 {
 	public class StateMappingLayoutLookup
 	{
+		private Dictionary<object, StateMappingLayout> lookup_ = new Dictionary<object, StateMappingLayout>();
+
 		public StateMappingLayoutLookup()
 		{
 		}
@@ -17,8 +19,7 @@ namespace CoFSM
 
 		public StateMappingLayout Get(object state)
 		{
-			StateMappingLayout layout = null;
-			if (lookup_.TryGetValue(state, out layout))
+			if (lookup_.TryGetValue(state, out StateMappingLayout layout))
 			{
 				return layout;
 			}
@@ -33,27 +34,11 @@ namespace CoFSM
 				return new ReadOnlyDictionary<object, StateMappingLayout>(lookup_);
 			}
 		}
-
-
-		//
-		// Member variables
-		//
-
-		private Dictionary<object, StateMappingLayout> lookup_ = new Dictionary<object, StateMappingLayout>();
 	}
-
 
 	public class StateMappingLayout
 	{
-		public StateMappingLayout(object state)
-		{
-			this.state = state;
-		}
-
-
-		//
-		// Member variables
-		//
+		static public StateMappingLayout Null = new StateMappingLayout(null);
 
 		public object state;
 
@@ -71,11 +56,9 @@ namespace CoFSM
 
 		public MethodInfo onCollisionEnterMethod;
 
-
-		//
-		// Static variables
-		//
-
-		static public StateMappingLayout Null = new StateMappingLayout(null);
+		public StateMappingLayout(object state)
+		{
+			this.state = state;
+		}
 	}
 }

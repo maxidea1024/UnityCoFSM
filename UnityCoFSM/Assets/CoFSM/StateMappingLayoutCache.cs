@@ -9,10 +9,11 @@ namespace CoFSM
 {
 	public class StateMappingLayoutCache
 	{
+        static Dictionary<System.Type, StateMappingLayoutLookup> _cache = new Dictionary<System.Type, StateMappingLayoutLookup>();
+
 		static public StateMappingLayoutLookup Get(Type componentType, Type stateEnumType)
 		{
-			StateMappingLayoutLookup lookup;
-			if (cache_.TryGetValue(componentType, out lookup))
+			if (_cache.TryGetValue(componentType, out StateMappingLayoutLookup lookup))
 			{
 				return lookup;
 			}
@@ -29,7 +30,7 @@ namespace CoFSM
 			}
 
 			StateMappingLayoutLookup lookup = new StateMappingLayoutLookup();
-			cache_.Add(componentType, lookup);
+			_cache.Add(componentType, lookup);
 
 			for (int i = 0; i < values.Length; ++i)
 			{
@@ -186,12 +187,5 @@ namespace CoFSM
 
             return true;
         }
-
-
-        //
-        // Static variables
-        //
-
-        static Dictionary<System.Type, StateMappingLayoutLookup> cache_ = new Dictionary<System.Type, StateMappingLayoutLookup>();
 	}
 }

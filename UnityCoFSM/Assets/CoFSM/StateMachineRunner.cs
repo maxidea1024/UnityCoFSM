@@ -7,15 +7,13 @@ namespace CoFSM
 {
 	public class StateMachineRunner : MonoBehaviour
 	{
-		//
-		// Public methods
-		//
+		private readonly List<IStateMachine> _stateMachineList = new List<IStateMachine>();
 
 		public StateMachine<T> Initialize<T>(MonoBehaviour monoComponent) where T : struct, IConvertible, IComparable
 		{
 			var fsm = new StateMachine<T>(this, monoComponent);
 
-			stateMachineList_.Add(fsm);
+			_stateMachineList.Add(fsm);
 
 			return fsm;
 		}
@@ -29,16 +27,11 @@ namespace CoFSM
 			return fsm;
 		}
 
-
-		//
-		// Unity callback methods
-		//
-
 		void FixedUpdate()
 		{
-			for (int i = 0; i < stateMachineList_.Count; ++i)
+			for (int i = 0; i < _stateMachineList.Count; ++i)
 			{
-				var fsm = stateMachineList_[i];
+				var fsm = _stateMachineList[i];
 
 				if (!fsm.IsInTransition && fsm.Component.enabled)
 				{
@@ -49,9 +42,9 @@ namespace CoFSM
 
 		void Update()
 		{
-			for (int i = 0; i < stateMachineList_.Count; ++i)
+			for (int i = 0; i < _stateMachineList.Count; ++i)
 			{
-				var fsm = stateMachineList_[i];
+				var fsm = _stateMachineList[i];
 
 				if (!fsm.IsInTransition && fsm.Component.enabled)
 				{
@@ -62,9 +55,9 @@ namespace CoFSM
 
 		void LateUpdate()
 		{
-			for (int i = 0; i < stateMachineList_.Count; ++i)
+			for (int i = 0; i < _stateMachineList.Count; ++i)
 			{
-				var fsm = stateMachineList_[i];
+				var fsm = _stateMachineList[i];
 
 				if (!fsm.IsInTransition && fsm.Component.enabled)
 				{
@@ -102,33 +95,10 @@ namespace CoFSM
 			// DO NOTHING..
 			yield break;
 		}
-
-
-		//
-		// Member variables
-		//
-
-		private readonly List<IStateMachine> stateMachineList_ = new List<IStateMachine>();
 	}
-
 
 	public class StateMapping
 	{
-		//
-		// Constructors
-		//
-
-		public StateMapping(object state, StateMappingLayout layout)
-		{
-			this.state = state;
-			this.layout = layout;
-		}
-
-
-		//
-		// Member variables
-		//
-
 		public object state;
 
 		public StateMappingLayout layout;
@@ -146,5 +116,11 @@ namespace CoFSM
 		public Action fixedUpdateCall = StateMachineRunner.DoNothing;
 
 		public Action<Collision> onCollisionEnterCall = StateMachineRunner.DoNothingCollision;
+
+		public StateMapping(object state, StateMappingLayout layout)
+		{
+			this.state = state;
+			this.layout = layout;
+		}
 	}
 }
