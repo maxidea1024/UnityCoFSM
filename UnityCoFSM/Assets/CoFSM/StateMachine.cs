@@ -380,7 +380,7 @@ namespace CoFSM
         /// <summary>
         /// Gets the current state ID.
         /// </summary>
-        public T State => _currentState.state != null ? (T)_currentState.state : default(T);77
+        public T State => _currentState.state != null ? (T)_currentState.state : default(T);
 
         /// <summary>
         /// Whether currently is in transition or not.
