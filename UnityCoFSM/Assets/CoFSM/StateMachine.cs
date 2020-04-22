@@ -29,7 +29,6 @@ namespace CoFSM
         Overwrite = 0x02,
     }
 
-
     public interface IStateMachine
     {
         MonoBehaviour Component { get; }
@@ -39,25 +38,24 @@ namespace CoFSM
         bool IsInTransition { get; }
     }
 
-
     public class StateMachine<T> : IStateMachine where T : struct, IConvertible, IComparable
     {
         public StateMachine(StateMachineRunner runner, MonoBehaviour monoComponent)
         {
-            runner_ = runner;
-            monoComponent_ = monoComponent;
+            _runner = runner;
+            _monoComponent = monoComponent;
 
             // Cache state layout lookup for specified Component's type.
             var layoutLookup = StateMappingLayoutCache.Get(monoComponent.GetType(), typeof(T));
 
-            stateLookup_ = new Dictionary<object, StateMapping>(layoutLookup.Lookup.Count);
+            _stateLookup = new Dictionary<object, StateMapping>(layoutLookup.Lookup.Count);
 
             foreach (var layoutPair in layoutLookup.Lookup)
             {
                 var layout = layoutPair.Value;
 
                 var mapping = new StateMapping(layout.state, layout);
-                stateLookup_.Add(mapping.state, mapping);
+                _stateLookup.Add(mapping.state, mapping);
 
                 // *_Enter callback
                 if (layout.enterMethod != null)
@@ -117,9 +115,9 @@ namespace CoFSM
             }
 
             // Create nil state mapping
-            currentState_ = new StateMapping(null, StateMappingLayout.Null);
+            _currentState = new StateMapping(null, StateMappingLayout.Null);
 
-            stateChangedAt_ = Time.time;
+            _stateChangedAt = Time.time;
         }
 
         private V CreateDelegate<V>(MethodInfo method, Object target) where V : class
@@ -157,13 +155,13 @@ namespace CoFSM
 
         public void Transit(T newState, TransitionOptions options)
         {
-            if (stateLookup_ == null)
+            if (_stateLookup == null)
             {
                 throw new Exception("States have not been configured, please call initialized before trying to set state");
             }
 
             StateMapping nextState = null;
-            if (!stateLookup_.TryGetValue(newState, out nextState))
+            if (!_stateLookup.TryGetValue(newState, out nextState))
             {
                 throw new Exception("No state with the name " + newState.ToString() + " can be found. Please make sure you are called the correct type the statemachine was initialized with");
             }
@@ -171,149 +169,149 @@ namespace CoFSM
             // Self transition.
             if ((options & TransitionOptions.AllowSelfTransition) == 0)
             {
-                if (currentState_ == nextState)
+                if (_currentState == nextState)
                 {
                     return;
                 }
             }
 
             // Cancel any queued changes.
-            if (queuedChange_ != null)
+            if (_queuedChange != null)
             {
-                runner_.StopCoroutine(queuedChange_);
-                queuedChange_ = null;
+                _runner.StopCoroutine(_queuedChange);
+                _queuedChange = null;
             }
 
             if ((options & TransitionOptions.Overwrite) == 0)
             {
-                if (isInTransition_)
+                if (_isInTransition)
                 {
                     // We are already exiting current state on our way to our previous target state
-                    if (exitCoroutine_ != null)
+                    if (_exitCoroutine != null)
                     {
                         // Overwrite with our new target
-                        destinationState_ = nextState;
+                        _destinationState = nextState;
                         return;
                     }
 
                     // We are already entering our previous target state.
                     // Need to wait for that to finish and call the exit routine.
-                    if (enterCoroutine_ != null)
+                    if (_enterCoroutine != null)
                     {
                         // Damn, I need to test this hard
-                        queuedChange_ = CoWaitForPreviousTranstionAndTransitToNext(nextState);
-                        runner_.StartCoroutine(queuedChange_);
+                        _queuedChange = CoWaitForPreviousTranstionAndTransitToNext(nextState);
+                        _runner.StartCoroutine(_queuedChange);
                         return;
                     }
                 }
             }
             else
             {
-                if (currentTransition_ != null)
+                if (_currentTransition != null)
                 {
-                    runner_.StopCoroutine(currentTransition_);
+                    _runner.StopCoroutine(_currentTransition);
                 }
 
-                if (exitCoroutine_ != null)
+                if (_exitCoroutine != null)
                 {
-                    runner_.StopCoroutine(exitCoroutine_);
+                    _runner.StopCoroutine(_exitCoroutine);
                 }
 
-                if (enterCoroutine_ != null)
+                if (_enterCoroutine != null)
                 {
-                    runner_.StopCoroutine(enterCoroutine_);
+                    _runner.StopCoroutine(_enterCoroutine);
                 }
             }
 
-            if ((currentState_ != null && currentState_.layout.hasExitCoroutine) || nextState.layout.hasEnterCoroutine)
+            if ((_currentState != null && _currentState.layout.hasExitCoroutine) || nextState.layout.hasEnterCoroutine)
             {
-                isInTransition_ = true;
-                currentTransition_ = CoTransitToNewState(nextState, options);
-                runner_.StartCoroutine(currentTransition_);
+                _isInTransition = true;
+                _currentTransition = CoTransitToNewState(nextState, options);
+                _runner.StartCoroutine(_currentTransition);
             }
             else //Same frame transition, no coroutines are present
             {
-                if (currentState_ != null)
+                if (_currentState != null)
                 {
-                    currentState_.exitCall();
-                    currentState_.finallyCall();
+                    _currentState.exitCall();
+                    _currentState.finallyCall();
                 }
 
-                lastState_ = currentState_;
-                currentState_ = nextState;
-                stateChangedAt_ = Time.time;
+                _lastState = _currentState;
+                _currentState = nextState;
+                _stateChangedAt = Time.time;
 
-                if (currentState_ != null)
+                if (_currentState != null)
                 {
-                    currentState_.enterCall();
+                    _currentState.enterCall();
 
-                    Changed?.Invoke(lastState_.state != null ? (T)lastState_.state : default(T), (T)currentState_.state);
+                    Changed?.Invoke(_lastState.state != null ? (T)_lastState.state : default(T), (T)_currentState.state);
                 }
 
-                isInTransition_ = false;
+                _isInTransition = false;
             }
         }
 
         private IEnumerator CoTransitToNewState(StateMapping newState, TransitionOptions options)
         {
             // Cache this so that we can overwrite it and hijack a transition.
-            destinationState_ = newState;
+            _destinationState = newState;
 
-            if (currentState_ != null)
+            if (_currentState != null)
             {
-                if (currentState_.layout.hasExitCoroutine)
+                if (_currentState.layout.hasExitCoroutine)
                 {
-                    exitCoroutine_ = currentState_.exitCoroutine();
+                    _exitCoroutine = _currentState.exitCoroutine();
 
                     // Don't wait for exit if we are overwriting
-                    if (exitCoroutine_ != null && (options & TransitionOptions.Overwrite) == 0)
+                    if (_exitCoroutine != null && (options & TransitionOptions.Overwrite) == 0)
                     {
-                        yield return runner_.StartCoroutine(exitCoroutine_);
+                        yield return _runner.StartCoroutine(_exitCoroutine);
                     }
 
-                    exitCoroutine_ = null;
+                    _exitCoroutine = null;
                 }
                 else
                 {
-                    currentState_.exitCall();
+                    _currentState.exitCall();
                 }
 
-                currentState_.finallyCall();
+                _currentState.finallyCall();
             }
 
-            lastState_ = currentState_;
-            currentState_ = destinationState_;
-            stateChangedAt_ = Time.time;
+            _lastState = _currentState;
+            _currentState = _destinationState;
+            _stateChangedAt = Time.time;
 
-            if (currentState_ != null)
+            if (_currentState != null)
             {
-                if (currentState_.layout.hasEnterCoroutine)
+                if (_currentState.layout.hasEnterCoroutine)
                 {
-                    enterCoroutine_ = currentState_.enterCoroutine();
+                    _enterCoroutine = _currentState.enterCoroutine();
 
-                    if (enterCoroutine_ != null)
+                    if (_enterCoroutine != null)
                     {
-                        yield return runner_.StartCoroutine(enterCoroutine_);
+                        yield return _runner.StartCoroutine(_enterCoroutine);
                     }
 
-                    enterCoroutine_ = null;
+                    _enterCoroutine = null;
                 }
                 else
                 {
-                    currentState_.enterCall();
+                    _currentState.enterCall();
                 }
 
                 // Broadcast change only after enter transition has begun.
-                Changed?.Invoke(lastState_.state != null ? (T)lastState_.state : default(T), (T)currentState_.state);
+                Changed?.Invoke(_lastState.state != null ? (T)_lastState.state : default(T), (T)_currentState.state);
             }
 
-            isInTransition_ = false;
+            _isInTransition = false;
         }
 
         private IEnumerator CoWaitForPreviousTranstionAndTransitToNext(StateMapping nextState)
         {
             // Waiting for previous transition is completed.
-            while (isInTransition_)
+            while (_isInTransition)
             {
                 yield return null;
             }
@@ -335,51 +333,32 @@ namespace CoFSM
         /// <summary>
         /// Gets the last state ID.
         /// </summary>
-        public T LastState
-        {
-            get { return lastState_ != null ? (T)lastState_.state : default(T); }
-        }
+        public T LastState => _lastState != null ? (T)_lastState.state : default(T);
 
         /// <summary>
         /// Gets the current state ID.
         /// </summary>
-        public T State
-        {
-            get { return currentState_.state != null ? (T)currentState_.state : default(T); }
-        }
+        public T State => _currentState.state != null ? (T)_currentState.state : default(T);77
 
         /// <summary>
         /// Whether currently is in transition or not.
         /// </summary>
-        public bool IsInTransition
-        {
-            get { return isInTransition_; }
-        }
+        public bool IsInTransition => _isInTransition;
 
         /// <summary>
         /// Gets the current state map.
         /// </summary>
-        public StateMapping CurrentStateMap
-        {
-            get { return currentState_; }
-        }
+        public StateMapping CurrentStateMap => _currentState;
 
         /// <summary>
         /// Gets the owner mono behaviour component.
         /// </summary>
-        public MonoBehaviour Component
-        {
-            get { return monoComponent_; }
-        }
+        public MonoBehaviour Component => _monoComponent;
 
         /// <summary>
         /// Gets the elapsed time(in seconds) since last state changed.
         /// </summary>
-        public float ElapsedTimeSinceStateChanged
-        {
-            get { return Time.time - stateChangedAt_; }
-        }
-
+        public float ElapsedTimeSinceStateChanged => Time.time - _stateChangedAt;
 
 
         //
@@ -434,37 +413,37 @@ namespace CoFSM
         /// <summary>
         /// Internal runner.
         /// </summary>
-        private readonly StateMachineRunner runner_;
+        private readonly StateMachineRunner _runner;
 
         /// <summary>
         /// Owner mono behaviour component
         /// </summary>
-        private readonly MonoBehaviour monoComponent_;
+        private readonly MonoBehaviour _monoComponent;
 
         /// <summary>
         /// Last(previous) state mapping
         /// </summary>
-        private StateMapping lastState_;
+        private StateMapping _lastState;
         /// <summary>
         /// Current state mapping
         /// </summary>
-        private StateMapping currentState_;
+        private StateMapping _currentState;
         /// <summary>
         /// Destination state mapping
         /// </summary>
-        private StateMapping destinationState_;
+        private StateMapping _destinationState;
 
         /// <summary>
         /// Time point at state was changed.
         /// </summary>
-        private float stateChangedAt_;
+        private float _stateChangedAt;
 
-        private readonly Dictionary<object, StateMapping> stateLookup_;
+        private readonly Dictionary<object, StateMapping> _stateLookup;
 
-        private bool isInTransition_ = false;
-        private IEnumerator currentTransition_;
-        private IEnumerator exitCoroutine_;
-        private IEnumerator enterCoroutine_;
-        private IEnumerator queuedChange_;
+        private bool _isInTransition = false;
+        private IEnumerator _currentTransition;
+        private IEnumerator _exitCoroutine;
+        private IEnumerator _enterCoroutine;
+        private IEnumerator _queuedChange;
     }
 }
